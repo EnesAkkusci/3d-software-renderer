@@ -1,0 +1,16 @@
+//////////////////////////////////////////////////
+// Conventions
+//////////////////////////////////////////////////
+/* 
+ *  - Left handed coordinate system
+ *  - +Z in to the screen
+ *  - Clock-wise winding order
+ *  - Row major vectors
+ */
+//////////////////////////////////////////////////
+#include <SDL.h>
+
+int main(int arc, char* argv[]) {
+
+	return 0;
+}
