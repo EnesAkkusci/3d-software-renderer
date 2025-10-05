@@ -8,6 +8,3 @@ make/
 build/
 .cache/
 GAME/
-
-assets/*
-!assets/.gitkeep
