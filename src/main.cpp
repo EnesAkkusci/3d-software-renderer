@@ -8,9 +8,20 @@
  *  - Row major vectors
  */
 //////////////////////////////////////////////////
-#include <SDL.h>
+#include "renderer.h"
+
+bool isRunning = false;
 
 int main(int arc, char* argv[]) {
+	isRunning = InitWindow();
+
+	Setup();
+	while(isRunning) {
+		ProcessInput(isRunning);
+		Update();
+		Render();
+	}
+	CleanUp();
 
 	return 0;
 }
