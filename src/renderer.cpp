@@ -7,6 +7,7 @@
 #include "display.h"
 #include "SDL_render.h"
 #include "SDL_video.h"
+#include "model.h"
 
 static const int FPS = 144;
 Renderer renderer = {
@@ -67,6 +68,8 @@ void Setup() {
 
 	ClearColorBuffer(0xFF000000); //Clear with black
 	ClearZBuffer();
+
+	LoadObjFile(model.mesh, "cube.obj");
 }
 
 void ProcessInput(bool &isRunning){
@@ -99,6 +102,8 @@ void Update() {
 }
 
 void Render() {
+	DrawGrid(10);
+
 	RenderColorBuffer();
 	ClearColorBuffer(0xFF000000); //Clear with black
 	ClearZBuffer();

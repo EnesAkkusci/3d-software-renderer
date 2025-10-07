@@ -26,3 +26,11 @@ void RenderColorBuffer() {
 
 	SDL_RenderCopy(renderer.sdlRenderer, renderer.sdlColorBufferTexture, NULL, NULL);
 }
+
+void DrawGrid(int step) {
+	for(int i = 0; i < renderer.windowHeight; i += step) {
+		for(int j = 0; j < renderer.windowWidth; j += step) {
+				display.colorBuffer[(i * renderer.windowWidth) + j] = 0xFF606060;
+		}
+	}
+}

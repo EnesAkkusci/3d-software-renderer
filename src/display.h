@@ -13,3 +13,5 @@ void ClearColorBuffer(Color color);
 void ClearZBuffer();
 
 void RenderColorBuffer();
+
+void DrawGrid(int step);
