@@ -1,4 +1,5 @@
 #pragma once
+#include "model.h"
 #include <cstdint>
 
 using Color = uint32_t;
@@ -12,6 +13,10 @@ extern Display display;
 void ClearColorBuffer(Color color);
 void ClearZBuffer();
 
-void RenderColorBuffer();
-
 void DrawGrid(int step);
+void DrawPixel(int x, int y, Color color);
+void DrawLine(int x0, int y0, int x1, int y1, Color color);
+void DrawTriangle(Triangle tri, Color color);
+void DrawRect(int x, int y, int w, int h, Color color);
+
+void RenderColorBuffer();
