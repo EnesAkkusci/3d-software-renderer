@@ -1,13 +1,10 @@
 #include <SDL.h>
 #include <iostream>
 #include "renderer.h"
-#include "SDL_events.h"
-#include "SDL_keycode.h"
-#include "SDL_pixels.h"
 #include "display.h"
-#include "SDL_render.h"
-#include "SDL_video.h"
+#include "linear_algebra.h"
 #include "model.h"
+#include "camera.h"
 
 static const int FPS = 144;
 Renderer renderer = {
@@ -94,6 +91,38 @@ void Update() {
 	int timeToWait = renderer.MIN_MS_PER_FRAME - (SDL_GetTicks64() - renderer.msPassedUntilLastFrame);
 	if (timeToWait > 0 && timeToWait <= renderer.MIN_MS_PER_FRAME) {
 		SDL_Delay(timeToWait);
+	}
+
+	//Setting up the worldToCameraMatrix
+	Mat4f yawMat = GetRotationMat(0, camera.yawAngle, 0);
+	camera.direction = Vec4MultMat4({0,0,1,0}, yawMat);
+	Mat4f worldToCameraMatrix = GetLookTowardsMat(
+		camera.position, 
+		camera.direction, 
+		{0,1,0}
+	);
+
+	//Setting up the tranformation matrices
+	Mat4f scaleMat = GetScaleMat(1, 1, 1);
+	Mat4f rotMat = GetRotationMat(0, 0, 0);
+	Mat4f translationMat = GetTranslationMat(0, 0, 5);
+
+	//Transformation and projection of the model vertices
+	for (Face face : model.mesh.faces){
+		Vec3f faceVertices[3] = {face.a,face.b,face.c};
+
+		Vec3f transformedVertices[3];
+		for (int i = 0; i < 3; i++) {
+			Vec3f v = faceVertices[i];
+			//Scale -> Rotate -> Translate
+			v = Vec4MultMat4(Vec4f(v), scaleMat);
+			v = Vec4MultMat4(Vec4f(v), rotMat);
+			v = Vec4MultMat4(Vec4f(v), translationMat);
+
+			v = Vec4MultMat4(Vec4f(v), worldToCameraMatrix);
+
+			transformedVertices[i] = v;
+		}
 	}
 
 	//Time passed between last and this frame. (Converted from ms to seconds)
