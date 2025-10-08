@@ -55,6 +55,7 @@ void LoadObjFile(Mesh &mesh, const char* filename){
 				.bUV = texCoords[textureIndices[1] - 1],
 				.cUV = texCoords[textureIndices[2] - 1]
 			};
+			mesh.faces.push_back(f);
 		}
 	}
 }

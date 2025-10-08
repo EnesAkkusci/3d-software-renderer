@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <immintrin.h>
 #include <iostream>
 #include "renderer.h"
 #include "display.h"
@@ -17,6 +18,10 @@ Renderer renderer = {
 	.windowWidth = 1920,
 	.windowHeight = 1080,
 	.sdlColorBufferTexture = nullptr,
+	.trisToRender = {},
+	.renderWireframe = true,
+	.renderMode = RenderMode::NO_TEXTURE,
+	.projectionMat = {},
 };
 
 bool InitWindow() {
@@ -63,6 +68,16 @@ void Setup() {
 	);
 	display.zBuffer = new float[renderer.windowWidth * renderer.windowHeight];
 
+	float verticalFov = M_PI/3.0;
+	float horizontalFov = atan(tan(verticalFov / 2) * ((float)renderer.windowWidth / renderer.windowHeight)) * 2.0;
+	float zNear = 0.1; float zFar = 100;
+	renderer.projectionMat = GetPerspectiveMat(
+		verticalFov, 
+		renderer.windowWidth, 
+		renderer.windowHeight, 
+		zNear, zFar
+	);
+
 	ClearColorBuffer(0xFF000000); //Clear with black
 	ClearZBuffer();
 
@@ -86,6 +101,7 @@ void ProcessInput(bool &isRunning){
 	}
 }
 
+float rotation  = 0.0;
 void Update() {
 	//Limiting the FPS
 	int timeToWait = renderer.MIN_MS_PER_FRAME - (SDL_GetTicks64() - renderer.msPassedUntilLastFrame);
@@ -102,16 +118,20 @@ void Update() {
 		{0,1,0}
 	);
 
+	//NOTE: Temporary
+	rotation += 0.01;
+
 	//Setting up the tranformation matrices
 	Mat4f scaleMat = GetScaleMat(1, 1, 1);
-	Mat4f rotMat = GetRotationMat(0, 0, 0);
+	Mat4f rotMat = GetRotationMat(rotation,rotation,rotation);
 	Mat4f translationMat = GetTranslationMat(0, 0, 5);
 
 	//Transformation and projection of the model vertices
-	for (Face face : model.mesh.faces){
+	for (Face &face : model.mesh.faces){
 		Vec3f faceVertices[3] = {face.a,face.b,face.c};
 
 		Vec3f transformedVertices[3];
+		Triangle triToRender;
 		for (int i = 0; i < 3; i++) {
 			Vec3f v = faceVertices[i];
 			//Scale -> Rotate -> Translate
@@ -119,10 +139,21 @@ void Update() {
 			v = Vec4MultMat4(Vec4f(v), rotMat);
 			v = Vec4MultMat4(Vec4f(v), translationMat);
 
+			//World space -> Camera space
 			v = Vec4MultMat4(Vec4f(v), worldToCameraMatrix);
 
-			transformedVertices[i] = v;
+			//Camera space -> Raster space
+			Vec4f projectedVertex = GetScreenCoords(
+				v, 
+				renderer.projectionMat, 
+				renderer.windowWidth, 
+				renderer.windowHeight
+			);
+
+			// transformedVertices[i] = projectedVertex;
+			triToRender.points[i] = projectedVertex;
 		}
+		renderer.trisToRender.push_back(triToRender);
 	}
 
 	//Time passed between last and this frame. (Converted from ms to seconds)
@@ -132,6 +163,21 @@ void Update() {
 
 void Render() {
 	DrawGrid(10);
+
+	switch (renderer.renderMode) {
+	case RenderMode::NO_TEXTURE :
+		break;
+	case RenderMode::FILLED :
+		break;
+	case RenderMode::TEXTURED :
+		break;
+	}
+
+	if (renderer.renderWireframe) {
+		for (const Triangle &tri : renderer.trisToRender) DrawTriangle(tri, 0xFF00FF00);
+	}
+
+	renderer.trisToRender.clear();
 
 	RenderColorBuffer();
 	ClearColorBuffer(0xFF000000); //Clear with black

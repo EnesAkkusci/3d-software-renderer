@@ -1,6 +1,14 @@
 #pragma once
-#include "SDL_render.h"
-#include "SDL_video.h"
+#include <vector>
+#include <SDL.h>
+#include "linear_algebra.h"
+#include "model.h"
+
+enum RenderMode {
+	TEXTURED,
+	FILLED,
+	NO_TEXTURE
+};
 
 struct Renderer{
 	const int MAX_FPS;
@@ -12,6 +20,10 @@ struct Renderer{
 	int windowWidth;
 	int windowHeight;
 	SDL_Texture* sdlColorBufferTexture;
+	std::vector<Triangle> trisToRender;
+	bool renderWireframe;
+	RenderMode renderMode;
+	Mat4f projectionMat;
 };
 extern Renderer renderer;
 
