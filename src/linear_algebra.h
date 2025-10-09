@@ -7,8 +7,9 @@ class Vec3f;
 class Vec4f;
 class Mat4f;
 
-Vec3f Vec3Cross(const Vec3f &rhs, const Vec3f &lhs);
-float Vec3Dot(const Vec3f &rhs, const Vec3f &lhs);
+Vec3f Vec3Cross(const Vec3f &lhs, const Vec3f &rhs);
+float Vec2Cross(const Vec2f &lhs, const Vec2f &rhs);
+float Vec3Dot(const Vec3f &lhs, const Vec3f &rhs);
 Vec4f Vec4MultMat4 (const Vec4f &v, const Mat4f &m);
 
 Mat4f GetScaleMat(float sx, float sy, float sz);

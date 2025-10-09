@@ -19,8 +19,8 @@ Renderer renderer = {
 	.windowHeight = 1080,
 	.sdlColorBufferTexture = nullptr,
 	.trisToRender = {},
-	.renderWireframe = true,
-	.renderMode = RenderMode::NO_TEXTURE,
+	.renderWireframe = false,
+	.renderMode = RenderMode::FILLED,
 	.projectionMat = {},
 };
 
@@ -168,13 +168,18 @@ void Render() {
 	case RenderMode::NO_TEXTURE :
 		break;
 	case RenderMode::FILLED :
+		for (const Triangle &tri : renderer.trisToRender) { 
+			DrawFilledTriangle(tri, 0xFFFFFFFF);
+		}
 		break;
 	case RenderMode::TEXTURED :
 		break;
 	}
 
 	if (renderer.renderWireframe) {
-		for (const Triangle &tri : renderer.trisToRender) DrawTriangle(tri, 0xFF00FF00);
+		for (const Triangle &tri : renderer.trisToRender) { 
+			DrawTriangle(tri, 0xFF00FF00);
+		}
 	}
 
 	renderer.trisToRender.clear();

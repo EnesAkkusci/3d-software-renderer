@@ -1,15 +1,19 @@
 #include "linear_algebra.h"
 #include <cmath>
 
-Vec3f Vec3Cross(const Vec3f &rhs, const Vec3f &lhs) {
+Vec3f Vec3Cross(const Vec3f &lhs, const Vec3f &rhs) {
 	return Vec3f(
-		rhs.y * lhs.z -rhs.z * lhs.y,
-		rhs.z * lhs.x -rhs.x * lhs.z,
-		rhs.x * lhs.y -rhs.y * lhs.x
+        lhs.y * rhs.z - lhs.z * rhs.y,
+        lhs.z * rhs.x - lhs.x * rhs.z,
+        lhs.x * rhs.y - lhs.y * rhs.x
 	);
 }
 
-float Vec3Dot(const Vec3f &rhs, const Vec3f &lhs) {
+float Vec2Cross(const Vec2f &lhs, const Vec2f &rhs) {
+	return lhs.x * rhs.y - lhs.y * rhs.x;
+}
+
+float Vec3Dot(const Vec3f &lhs, const Vec3f &rhs) {
 	return rhs.x * lhs.x + rhs.y * lhs.y + rhs.z * lhs.z;
 }
 
