@@ -19,9 +19,10 @@ Renderer renderer = {
 	.windowHeight = 1080,
 	.sdlColorBufferTexture = nullptr,
 	.trisToRender = {},
-	.renderWireframe = false,
-	.renderMode = RenderMode::FILLED,
+	.renderWireframe = true,
+	.renderMode = RenderMode::NO_TEXTURE,
 	.projectionMat = {},
+	.backfaceCulling = true,
 };
 
 bool InitWindow() {
@@ -129,9 +130,9 @@ void Update() {
 	//Transformation and projection of the model vertices
 	for (Face &face : model.mesh.faces){
 		Vec3f faceVertices[3] = {face.a,face.b,face.c};
+		Vec3f faceNormal = {};
+		Vec3f cameraSpaceVertices[3];
 
-		Vec3f transformedVertices[3];
-		Triangle triToRender;
 		for (int i = 0; i < 3; i++) {
 			Vec3f v = faceVertices[i];
 			//Scale -> Rotate -> Translate
@@ -141,7 +142,24 @@ void Update() {
 
 			//World space -> Camera space
 			v = Vec4MultMat4(Vec4f(v), worldToCameraMatrix);
+			cameraSpaceVertices[i] = v;
+			faceNormal = Vec3Cross(
+				{cameraSpaceVertices[1] - cameraSpaceVertices[0]},
+				{cameraSpaceVertices[2] - cameraSpaceVertices[0]}
+			);
+		}
 
+		if(renderer.backfaceCulling) {
+			//The reason for using 0,0,0 is the fact that we are now in camera space making the origin the position of the camera
+			Vec3f origin = {0,0,0};
+			Vec3f cameraRay = origin - cameraSpaceVertices[0];
+			float dot = Vec3Dot(faceNormal, cameraRay);
+			if (dot < 0) continue;
+		}
+
+		Triangle triToRender;
+		for (int i = 0; i < 3; i++) {
+			Vec3f v = cameraSpaceVertices[i];
 			//Camera space -> Raster space
 			Vec4f projectedVertex = GetScreenCoords(
 				v, 
@@ -150,9 +168,9 @@ void Update() {
 				renderer.windowHeight
 			);
 
-			// transformedVertices[i] = projectedVertex;
 			triToRender.points[i] = projectedVertex;
 		}
+
 		renderer.trisToRender.push_back(triToRender);
 	}
 
@@ -164,23 +182,17 @@ void Update() {
 void Render() {
 	DrawGrid(10);
 
-	switch (renderer.renderMode) {
-	case RenderMode::NO_TEXTURE :
-		break;
-	case RenderMode::FILLED :
-		for (const Triangle &tri : renderer.trisToRender) { 
-			DrawFilledTriangle(tri, 0xFFFFFFFF);
+	for (const Triangle &tri : renderer.trisToRender) {
+		switch (renderer.renderMode) {
+		case RenderMode::NO_TEXTURE: break;
+		case RenderMode::FILLED: DrawFilledTriangle(tri, 0xFFFFFFFF); break;
+		case RenderMode::TEXTURED: break;
 		}
-		break;
-	case RenderMode::TEXTURED :
-		break;
+
+		if (renderer.renderWireframe) { DrawTriangle(tri, 0xFF00FF00); }
 	}
 
-	if (renderer.renderWireframe) {
-		for (const Triangle &tri : renderer.trisToRender) { 
-			DrawTriangle(tri, 0xFF00FF00);
-		}
-	}
+
 
 	renderer.trisToRender.clear();
 

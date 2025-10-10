@@ -24,6 +24,7 @@ struct Renderer{
 	bool renderWireframe;
 	RenderMode renderMode;
 	Mat4f projectionMat;
+	bool backfaceCulling;
 };
 extern Renderer renderer;
 
