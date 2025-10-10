@@ -3,23 +3,21 @@
 #include "model.h"
 #include <cstdint>
 
-using Color = uint32_t;
-
 struct Display{
-	Color* colorBuffer;
+	uint32_t* colorBuffer;
 	float* zBuffer;
 };
 extern Display display;
 
-void ClearColorBuffer(Color color);
+void ClearColorBuffer(uint32_t color);
 void ClearZBuffer();
 
 void DrawGrid(int step);
-void DrawPixel(int x, int y, Color color);
-void DrawLine(int x0, int y0, int x1, int y1, Color color);
-void DrawTriangle(const Triangle &tri, Color color);
-void DrawFilledRect(int x, int y, int w, int h, Color color);
-void DrawFilledTriangle(const Triangle &tri, Color color);
+void DrawPixel(int x, int y, uint32_t color);
+void DrawLine(int x0, int y0, int x1, int y1, uint32_t color);
+void DrawTriangle(const Triangle &tri, uint32_t color);
+void DrawFilledRect(int x, int y, int w, int h, uint32_t color);
+void DrawFilledTriangle(const Triangle &tri, uint32_t color);
 
 Vec4f GetScreenCoords(const Vec4f &camCoords, const Mat4f &projMat, int windowWidth, int windowHeight);
 

@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <cstdint>
 #include <immintrin.h>
 #include <iostream>
 #include "renderer.h"
@@ -20,7 +21,7 @@ Renderer renderer = {
 	.sdlColorBufferTexture = nullptr,
 	.trisToRender = {},
 	.renderWireframe = true,
-	.renderMode = RenderMode::NO_TEXTURE,
+	.renderMode = RenderMode::FILLED,
 	.projectionMat = {},
 	.backfaceCulling = true,
 };
@@ -59,7 +60,7 @@ bool InitWindow() {
 }
 
 void Setup() {
-	display.colorBuffer = new Color[renderer.windowWidth * renderer.windowHeight];
+	display.colorBuffer = new uint32_t[renderer.windowWidth * renderer.windowHeight];
 	renderer.sdlColorBufferTexture = SDL_CreateTexture(
 		renderer.sdlRenderer,
 		SDL_PIXELFORMAT_RGBA32,
@@ -83,6 +84,7 @@ void Setup() {
 	ClearZBuffer();
 
 	LoadObjFile(model.mesh, "cube.obj");
+	LoadPngTexture(model, "cube.png");
 }
 
 void ProcessInput(bool &isRunning){
@@ -203,6 +205,8 @@ void Render() {
 }
 
 void CleanUp() {
+	UnloadObjFile(model.mesh);
+	UnloadPngTexture(model);
 	delete[] display.colorBuffer;
 	delete[] display.zBuffer;
 	SDL_DestroyTexture(renderer.sdlColorBufferTexture);

@@ -1,3 +1,6 @@
+#include <cstdint>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 #include <fstream>
 #include <iostream>
 #include <stdio.h>
@@ -11,7 +14,7 @@ void LoadObjFile(Mesh &mesh, const char* filename){
 	std::string fullPath = std::string(ASSETS_PATH) + filename;
 	std::ifstream file(fullPath);
 	if(file.fail()) {
-		std::cout << "Couldn't open obj file." << std::endl;
+		std::cout << "Couldn't open obj file: " << filename << std::endl;
 		return;
 	}
 
@@ -57,5 +60,33 @@ void LoadObjFile(Mesh &mesh, const char* filename){
 			};
 			mesh.faces.push_back(f);
 		}
+	}
+}
+
+void UnloadObjFile(Mesh &mesh) {
+	mesh.faces.clear();
+}
+
+void LoadPngTexture(Model &model, const char* filename) {
+	stbi_set_flip_vertically_on_load(1);
+
+	std::string fullPath = std::string(ASSETS_PATH) + filename;
+	int w,h,n;
+	unsigned char* data = stbi_load(fullPath.c_str(), &w, &h, &n, STBI_rgb_alpha);
+	if (!data) {
+		std::cout << "Couldn't load png file: " << filename << ", " << stbi_failure_reason() << std::endl;
+	}
+
+	model.textureWidth = w;
+	model.textureHeight = h;
+	model.meshTexture = (uint32_t*)data;
+}
+
+void UnloadPngTexture(Model &model) {
+	if (model.meshTexture) {
+		stbi_image_free((void*) model.meshTexture);
+		model.meshTexture = nullptr;
+		model.textureWidth = 0;
+		model.textureHeight = 0;
 	}
 }

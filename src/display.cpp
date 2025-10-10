@@ -9,7 +9,7 @@ Display display = {
 	.zBuffer = nullptr,
 };
 
-void ClearColorBuffer(Color color) {
+void ClearColorBuffer(uint32_t color) {
 	for (int i = 0; i < renderer.windowWidth * renderer.windowHeight; i++)
 		display.colorBuffer[i] = color;
 }
@@ -27,14 +27,14 @@ void DrawGrid(int step) {
 	}
 }
 
-void DrawPixel(int x, int y, Color color) {
+void DrawPixel(int x, int y, uint32_t color) {
 	if(x >= 0 and y >= 0 and x < renderer.windowWidth and y < renderer.windowHeight)
 		display.colorBuffer[(y * renderer.windowWidth) + x] = color;
 	else std::cout << "Out of window bounds DrawPixel() call." << std::endl;
 }
 
 //Bresensham's line algorithm
-void DrawLine(int x0, int y0, int x1, int y1, Color color) {
+void DrawLine(int x0, int y0, int x1, int y1, uint32_t color) {
 	int dx = abs(x1 - x0);
 	int sx = x0 < x1 ? 1 : -1;
 	int dy = -abs(y1 - y0);
@@ -56,13 +56,13 @@ void DrawLine(int x0, int y0, int x1, int y1, Color color) {
 	}
 }
 
-void DrawTriangle(const Triangle &tri, Color color) {
+void DrawTriangle(const Triangle &tri, uint32_t color) {
 	DrawLine(tri.points[0].x, tri.points[0].y, tri.points[1].x, tri.points[1].y, color);
 	DrawLine(tri.points[1].x, tri.points[1].y, tri.points[2].x, tri.points[2].y, color);
 	DrawLine(tri.points[2].x, tri.points[2].y, tri.points[0].x, tri.points[0].y, color);
 }
 
-void DrawFilledRect(int x, int y, int w, int h, Color color) {
+void DrawFilledRect(int x, int y, int w, int h, uint32_t color) {
 	for (int i = 0; i < h; i++) {
 		for (int j = 0; j < w; j++) {
 			DrawPixel(j+x, i+y, color);
@@ -78,7 +78,7 @@ bool isEdgeTopLeft(const Vec4f &start, const Vec4f &end){
 }
 
 //Bounding Box Barycentric Rasterization
-void DrawFilledTriangle(const Triangle &tri, Color color) {
+void DrawFilledTriangle(const Triangle &tri, uint32_t color) {
 	Vec4f v0 = tri.points[0];
 	Vec4f v1 = tri.points[1];
 	Vec4f v2 = tri.points[2];

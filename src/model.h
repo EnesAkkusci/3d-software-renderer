@@ -25,7 +25,14 @@ struct Mesh {
 
 struct Model {
 	Mesh mesh;
+	int textureWidth;
+	int textureHeight;
+	uint32_t *meshTexture;
 };
 extern Model model;
 
 void LoadObjFile(Mesh &mesh, const char* filename);
+void UnloadObjFile(Mesh &mesh);
+
+void LoadPngTexture(Model &model, const char* filename);
+void UnloadPngTexture(Model &model);
