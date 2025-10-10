@@ -3,6 +3,9 @@
 #include <immintrin.h>
 #include <iostream>
 #include "renderer.h"
+#include "SDL_pixels.h"
+#include "SDL_render.h"
+#include "SDL_video.h"
 #include "display.h"
 #include "linear_algebra.h"
 #include "model.h"
@@ -21,7 +24,7 @@ Renderer renderer = {
 	.sdlColorBufferTexture = nullptr,
 	.trisToRender = {},
 	.renderWireframe = true,
-	.renderMode = RenderMode::FILLED,
+	.renderMode = RenderMode::TEXTURED,
 	.projectionMat = {},
 	.backfaceCulling = true,
 };
@@ -122,7 +125,7 @@ void Update() {
 	);
 
 	//NOTE: Temporary
-	rotation += 0.01;
+	rotation += 0.005;
 
 	//Setting up the tranformation matrices
 	Mat4f scaleMat = GetScaleMat(1, 1, 1);
@@ -144,7 +147,9 @@ void Update() {
 
 			//World space -> Camera space
 			v = Vec4MultMat4(Vec4f(v), worldToCameraMatrix);
+
 			cameraSpaceVertices[i] = v;
+
 			faceNormal = Vec3Cross(
 				{cameraSpaceVertices[1] - cameraSpaceVertices[0]},
 				{cameraSpaceVertices[2] - cameraSpaceVertices[0]}
@@ -173,6 +178,10 @@ void Update() {
 			triToRender.points[i] = projectedVertex;
 		}
 
+		triToRender.texCoords[0] = {face.aUV.u, face.aUV.v};
+		triToRender.texCoords[1] = {face.bUV.u, face.bUV.v};
+		triToRender.texCoords[2] = {face.cUV.u, face.cUV.v};
+		
 		renderer.trisToRender.push_back(triToRender);
 	}
 
@@ -184,11 +193,11 @@ void Update() {
 void Render() {
 	DrawGrid(10);
 
-	for (const Triangle &tri : renderer.trisToRender) {
+	for (Triangle &tri : renderer.trisToRender) {
 		switch (renderer.renderMode) {
 		case RenderMode::NO_TEXTURE: break;
 		case RenderMode::FILLED: DrawFilledTriangle(tri, 0xFFFFFFFF); break;
-		case RenderMode::TEXTURED: break;
+		case RenderMode::TEXTURED: DrawTexturedTriangle(tri, model.meshTexture);
 		}
 
 		if (renderer.renderWireframe) { DrawTriangle(tri, 0xFF00FF00); }

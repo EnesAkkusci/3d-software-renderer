@@ -18,6 +18,8 @@ void DrawLine(int x0, int y0, int x1, int y1, uint32_t color);
 void DrawTriangle(const Triangle &tri, uint32_t color);
 void DrawFilledRect(int x, int y, int w, int h, uint32_t color);
 void DrawFilledTriangle(const Triangle &tri, uint32_t color);
+void DrawTexel(int x, int y, const Triangle &tri, uint32_t *texture, const Vec3f &weights);
+void DrawTexturedTriangle(Triangle &tri, uint32_t *texture);
 
 Vec4f GetScreenCoords(const Vec4f &camCoords, const Mat4f &projMat, int windowWidth, int windowHeight);
 

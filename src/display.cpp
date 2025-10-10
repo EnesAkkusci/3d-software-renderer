@@ -1,6 +1,8 @@
 #include "display.h"
 #include "linear_algebra.h"
 #include "renderer.h"
+#include <algorithm>
+#include <cstdint>
 #include <iostream>
 #include <ostream>
 
@@ -63,11 +65,37 @@ void DrawTriangle(const Triangle &tri, uint32_t color) {
 }
 
 void DrawFilledRect(int x, int y, int w, int h, uint32_t color) {
-	for (int i = 0; i < h; i++) {
-		for (int j = 0; j < w; j++) {
-			DrawPixel(j+x, i+y, color);
-		}
-	}
+	for (int i = 0; i < h; i++) { for (int j = 0; j < w; j++) { DrawPixel(j+x, i+y, color); } }
+}
+
+void DrawTexel(int x, int y, const Triangle &tri, uint32_t *texture, const Vec3f &weights) {
+	float alpha = weights.x; float beta = weights.y; float gamma = weights.z;
+	
+	float u0 = tri.texCoords[0].u; float v0 = tri.texCoords[0].v;
+	float u1 = tri.texCoords[1].u; float v1 = tri.texCoords[1].v;
+	float u2 = tri.texCoords[2].u; float v2 = tri.texCoords[2].v;
+
+	float aw = tri.points[0].w;
+	float bw = tri.points[1].w;
+	float cw = tri.points[2].w;
+
+	//Interpolation of all u/w and v/w using weights and a factor of 1/w
+	float interpolatedU = (u0/aw) * alpha + (u1/bw) * beta + (u2/cw) * gamma;
+	float interpolatedV = (v0/aw) * alpha + (v1/bw) * beta + (v2/cw) * gamma;
+	// std::cout << interpolatedU << ", " << interpolatedV << std::endl;
+	float interpolatedReciprocatedW = (1/aw) * alpha + (1/bw) * beta + (1/cw) * gamma;
+	interpolatedU /= interpolatedReciprocatedW;
+	interpolatedV /= interpolatedReciprocatedW;
+
+	int textureX = abs((int)(interpolatedU * model.textureWidth)) % model.textureWidth;
+	int textureY = abs((int)(interpolatedV * model.textureHeight)) % model.textureHeight;
+
+	//Possibly unnecessary
+	bool inBounds = x >= 0 and y >= 0 and x < renderer.windowWidth and y < renderer.windowHeight;
+	if (!inBounds) return;
+
+	uint32_t color = texture[(model.textureWidth * textureY) + textureX];
+    DrawPixel(x, y, color);// DrawPixel(x,y,color);
 }
 
 bool isEdgeTopLeft(const Vec4f &start, const Vec4f &end){
@@ -78,7 +106,7 @@ bool isEdgeTopLeft(const Vec4f &start, const Vec4f &end){
 }
 
 //Bounding Box Barycentric Rasterization
-void DrawFilledTriangle(const Triangle &tri, uint32_t color) {
+void RasterizeTriangle(const Triangle &tri, bool isTextured, uint32_t color, uint32_t *texture){
 	Vec4f v0 = tri.points[0];
 	Vec4f v1 = tri.points[1];
 	Vec4f v2 = tri.points[2];
@@ -99,7 +127,8 @@ void DrawFilledTriangle(const Triangle &tri, uint32_t color) {
 	float deltaW2Row = (v1.x - v0.x);
 
 	//Area of the bigger triangle for the denominator of the barycentric weights.
-	// float area = Vec2Cross(Vec2f(v1 - v0), Vec2f(v2 - v0));
+	float area;
+	if (isTextured) { area = Vec2Cross(Vec2f(v1 - v0), Vec2f(v2 - v0)); }
 
 	//Fill convention (top-left rasterization rule)
 	//if the edge is not top left we will forego fill rights
@@ -122,7 +151,12 @@ void DrawFilledTriangle(const Triangle &tri, uint32_t color) {
 
 		for (int x = xMin; x < xMax; x++) {
 			bool isInside = w0 >= 0 and w1 >= 0 and w2 >= 0;
-			if (isInside) { DrawPixel(x, y, color); }
+			if (isInside) { 
+				if (isTextured) { 
+					DrawTexel(x, y, tri, model.meshTexture, {w0/area, w1/area, w2/area});
+				}
+				else { DrawPixel(x, y, color); }
+			}
 
 			w0 += deltaW0Col;
 			w1 += deltaW1Col;
@@ -133,6 +167,15 @@ void DrawFilledTriangle(const Triangle &tri, uint32_t color) {
 		w1Row += deltaW1Row;
 		w2Row += deltaW2Row;
 	}
+
+}
+
+void DrawFilledTriangle(const Triangle &tri, uint32_t color) {
+	RasterizeTriangle(tri, false, color, nullptr);
+}
+
+void DrawTexturedTriangle(Triangle &tri, uint32_t *texture) {
+	RasterizeTriangle(tri, true, 0, texture);
 }
 
 Vec4f GetScreenCoords(const Vec4f &camCoords, const Mat4f &projMat, int windowWidth, int windowHeight) {
