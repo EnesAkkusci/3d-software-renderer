@@ -94,13 +94,25 @@ void ProcessInput(bool &isRunning){
 	SDL_Event sdlEvent;
 	while(SDL_PollEvent(&sdlEvent)) {
 		switch (sdlEvent.type){
-		case SDL_QUIT:
-			isRunning = false;
-			break;
+		case SDL_QUIT: isRunning = false; break;
 		case SDL_KEYDOWN:
 			switch (sdlEvent.key.keysym.sym) {
-			case SDLK_ESCAPE:
-				isRunning = false;
+			case SDLK_ESCAPE: isRunning = false; break;
+			case SDLK_w: //Move forward
+				camera.position = camera.position + 
+					camera.direction * (camera.speed * renderer.deltaTime);
+				break;
+			case SDLK_a: //Move left
+				camera.position = camera.position + 
+					Vec3Cross({0,1,0}, camera.direction) * (-camera.speed * renderer.deltaTime);
+				break;
+			case SDLK_s: //Move backward
+				camera.position = camera.position + 
+					camera.direction * (-camera.speed * renderer.deltaTime);
+				break;
+			case SDLK_d: //Move right
+				camera.position = camera.position + 
+					Vec3Cross({0,1,0}, camera.direction) * (-camera.speed * renderer.deltaTime);
 				break;
 			}
 		}
