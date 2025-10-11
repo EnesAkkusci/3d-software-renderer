@@ -23,7 +23,7 @@ Renderer renderer = {
 	.windowHeight = 1080,
 	.sdlColorBufferTexture = nullptr,
 	.trisToRender = {},
-	.renderWireframe = true,
+	.renderWireframe = false,
 	.renderMode = RenderMode::TEXTURED,
 	.projectionMat = {},
 	.backfaceCulling = true,
@@ -86,8 +86,8 @@ void Setup() {
 	ClearColorBuffer(0xFF000000); //Clear with black
 	ClearZBuffer();
 
-	LoadObjFile(model.mesh, "cube.obj");
-	LoadPngTexture(model, "cube.png");
+	LoadObjFile(model.mesh, "crab.obj");
+	LoadPngTexture(model, "crab.png");
 }
 
 void ProcessInput(bool &isRunning){
@@ -125,7 +125,7 @@ void Update() {
 	);
 
 	//NOTE: Temporary
-	rotation += 0.005;
+	rotation += 1 * renderer.deltaTime;
 
 	//Setting up the tranformation matrices
 	Mat4f scaleMat = GetScaleMat(1, 1, 1);

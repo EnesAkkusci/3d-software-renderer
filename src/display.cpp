@@ -94,8 +94,12 @@ void DrawTexel(int x, int y, const Triangle &tri, uint32_t *texture, const Vec3f
 	bool inBounds = x >= 0 and y >= 0 and x < renderer.windowWidth and y < renderer.windowHeight;
 	if (!inBounds) return;
 
-	uint32_t color = texture[(model.textureWidth * textureY) + textureX];
-    DrawPixel(x, y, color);// DrawPixel(x,y,color);
+	//Only draw the pixel if the depth value is less than the previous drawn pixel
+	if (interpolatedReciprocatedW > display.zBuffer[(renderer.windowWidth * y) + x]) {
+		uint32_t color = texture[(model.textureWidth * textureY) + textureX];
+		DrawPixel(x, y, color);
+		display.zBuffer[(renderer.windowWidth * y) + x] = interpolatedReciprocatedW;
+	}
 }
 
 bool isEdgeTopLeft(const Vec4f &start, const Vec4f &end){
