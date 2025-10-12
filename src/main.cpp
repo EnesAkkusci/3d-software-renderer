@@ -8,6 +8,27 @@
  *  - Row major vectors
  */
 //////////////////////////////////////////////////
+// Graphics Pipeline
+//////////////////////////////////////////////////
+/*
+ *		Model Space
+ *			 |
+ *			 v
+ *		World Space
+ *			 |
+ *			 v
+ *		Camera Space
+ *			 |
+ *			 v
+ *	  Backface Culling
+ *			 |
+ *			 v
+ *			NDC
+ *			 |
+ *			 v
+ *		Raster Space
+ */
+//////////////////////////////////////////////////
 #include "renderer.h"
 
 bool isRunning = false;

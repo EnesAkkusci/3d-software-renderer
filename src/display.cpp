@@ -191,6 +191,7 @@ Vec4f GetScreenCoords(const Vec4f &camCoords, const Mat4f &projMat, int windowWi
 		v.y /= v.w;
 		v.z /= v.w;
 	};
+	//Note: NDC is achieved with the combination of the projection matrix multiplication and perspective divide.
 	//NDC -> Raster space
 	v.y *= -1;
 	v.x *= windowWidth/2.0;
