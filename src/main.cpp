@@ -19,9 +19,11 @@
  *			 v
  *		Camera Space
  *			 |
+ *			 v Backface Culling
+ *			 | Projection
  *			 v
- *	  Backface Culling
- *			 |
+ *		Clip Space
+ *			 | Perspective Divide
  *			 v
  *			NDC
  *			 |

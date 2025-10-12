@@ -10,6 +10,7 @@
 #include "linear_algebra.h"
 #include "model.h"
 #include "camera.h"
+#include "clipping.h"
 
 static const int FPS = 144;
 Renderer renderer = {
@@ -23,7 +24,7 @@ Renderer renderer = {
 	.windowHeight = 1080,
 	.sdlColorBufferTexture = nullptr,
 	.trisToRender = {},
-	.renderWireframe = false,
+	.renderWireframe = true,
 	.renderMode = RenderMode::TEXTURED,
 	.projectionMat = {},
 	.backfaceCulling = true,
@@ -76,6 +77,7 @@ void Setup() {
 	float verticalFov = M_PI/3.0;
 	float horizontalFov = atan(tan(verticalFov / 2) * ((float)renderer.windowWidth / renderer.windowHeight)) * 2.0;
 	float zNear = 0.1; float zFar = 100;
+	clipping.frustum = InitFrustumPlanes(verticalFov, horizontalFov, zNear, zFar);
 	renderer.projectionMat = GetPerspectiveMat(
 		verticalFov, 
 		renderer.windowWidth, 
@@ -112,7 +114,7 @@ void ProcessInput(bool &isRunning){
 				break;
 			case SDLK_d: //Move right
 				camera.position = camera.position + 
-					Vec3Cross({0,1,0}, camera.direction) * (-camera.speed * renderer.deltaTime);
+					Vec3Cross({0,1,0}, camera.direction) * (camera.speed * renderer.deltaTime);
 				break;
 			}
 		}
@@ -137,7 +139,7 @@ void Update() {
 	);
 
 	//NOTE: Temporary
-	rotation += 1 * renderer.deltaTime;
+	// rotation += 1 * renderer.deltaTime;
 
 	//Setting up the tranformation matrices
 	Mat4f scaleMat = GetScaleMat(1, 1, 1);
@@ -176,25 +178,75 @@ void Update() {
 			if (dot < 0) continue;
 		}
 
-		Triangle triToRender;
-		for (int i = 0; i < 3; i++) {
-			Vec3f v = cameraSpaceVertices[i];
-			//Camera space -> Raster space
-			Vec4f projectedVertex = GetScreenCoords(
-				v, 
-				renderer.projectionMat, 
-				renderer.windowWidth, 
-				renderer.windowHeight
-			);
+		//Projection
+		Triangle projectedTri = {
+			.points = {
+				Vec4MultMat4(cameraSpaceVertices[0], renderer.projectionMat),
+				Vec4MultMat4(cameraSpaceVertices[1], renderer.projectionMat),
+				Vec4MultMat4(cameraSpaceVertices[2], renderer.projectionMat)
+			},
+			.texCoords = {
+				{face.aUV.u, face.aUV.v},
+				{face.bUV.u, face.bUV.v},
+				{face.cUV.u, face.cUV.v}
+			}
+		};
+		Polygon poly = CreatePolygonFromTriangle(projectedTri);
 
-			triToRender.points[i] = projectedVertex;
+		//Frustum clipping
+		ClipPolygonAxisSide(X_AXIS, 1.0, poly);
+		ClipPolygonAxisSide(X_AXIS, -1.0, poly);
+		ClipPolygonAxisSide(Y_AXIS, 1.0, poly);
+		ClipPolygonAxisSide(Y_AXIS, -1.0, poly);
+		ClipPolygonAxisSide(Z_AXIS, 1.0, poly);
+		ClipPolygonAxisSide(Z_AXIS, -1.0, poly);
+
+		Triangle clippedTris[MAX_NUM_POLY_TRIS];
+		int clippedTrisCount = 0;
+		CreateTrisFromPolygon(poly, clippedTris, clippedTrisCount);
+
+		for (int t = 0; t < clippedTrisCount; t++) {
+			const Triangle &baseTri = clippedTris[t];
+			Triangle triToRender;
+
+			for (int i = 0; i < 3; i++) {
+				Vec4f screenPoint = GetScreenCoords(
+					baseTri.points[i],
+					renderer.projectionMat,
+					renderer.windowWidth,
+					renderer.windowHeight,
+					false
+				);
+
+				triToRender.points[i] = screenPoint;
+			}
+
+			triToRender.texCoords[0] = baseTri.texCoords[0];
+			triToRender.texCoords[1] = baseTri.texCoords[1];
+			triToRender.texCoords[2] = baseTri.texCoords[2];
+
+			renderer.trisToRender.push_back(triToRender);
 		}
-
-		triToRender.texCoords[0] = {face.aUV.u, face.aUV.v};
-		triToRender.texCoords[1] = {face.bUV.u, face.bUV.v};
-		triToRender.texCoords[2] = {face.cUV.u, face.cUV.v};
 		
-		renderer.trisToRender.push_back(triToRender);
+		// Triangle triToRender;
+		// for (int i = 0; i < 3; i++) {
+		// 	Vec3f v = cameraSpaceVertices[i];
+		// 	//Camera space -> Raster space
+		// 	Vec4f projectedVertex = GetScreenCoords(
+		// 		v, 
+		// 		renderer.projectionMat, 
+		// 		renderer.windowWidth, 
+		// 		renderer.windowHeight
+		// 	);
+		//
+		// 	triToRender.points[i] = projectedVertex;
+		// }
+		// Triangle triToRender;
+		// triToRender.texCoords[0] = {face.aUV.u, face.aUV.v};
+		// triToRender.texCoords[1] = {face.bUV.u, face.bUV.v};
+		// triToRender.texCoords[2] = {face.cUV.u, face.cUV.v};
+		//
+		// renderer.trisToRender.push_back(triToRender);
 	}
 
 	//Time passed between last and this frame. (Converted from ms to seconds)

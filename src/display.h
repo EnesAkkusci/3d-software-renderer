@@ -21,6 +21,6 @@ void DrawFilledTriangle(const Triangle &tri, uint32_t color);
 void DrawTexel(int x, int y, const Triangle &tri, uint32_t *texture, const Vec3f &weights);
 void DrawTexturedTriangle(Triangle &tri, uint32_t *texture);
 
-Vec4f GetScreenCoords(const Vec4f &camCoords, const Mat4f &projMat, int windowWidth, int windowHeight);
+Vec4f GetScreenCoords(const Vec4f &camCoords, const Mat4f &projMat, int windowWidth, int windowHeight, bool project);
 
 void RenderColorBuffer();

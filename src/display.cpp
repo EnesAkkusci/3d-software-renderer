@@ -32,7 +32,7 @@ void DrawGrid(int step) {
 void DrawPixel(int x, int y, uint32_t color) {
 	if(x >= 0 and y >= 0 and x < renderer.windowWidth and y < renderer.windowHeight)
 		display.colorBuffer[(y * renderer.windowWidth) + x] = color;
-	else std::cout << "Out of window bounds DrawPixel() call." << std::endl;
+	// else std::cout << "Out of window bounds DrawPixel() call. Coords: " << x << ", " << y << std::endl;
 }
 
 //Bresensham's line algorithm
@@ -182,9 +182,12 @@ void DrawTexturedTriangle(Triangle &tri, uint32_t *texture) {
 	RasterizeTriangle(tri, true, 0, texture);
 }
 
-Vec4f GetScreenCoords(const Vec4f &camCoords, const Mat4f &projMat, int windowWidth, int windowHeight) {
+Vec4f GetScreenCoords(const Vec4f &camCoords, const Mat4f &projMat, int windowWidth, int windowHeight, bool project) {
+	//if (project)
 	//Camera space -> NDC
-	Vec4f v = Vec4MultMat4(camCoords, projMat);
+	//else
+	//Clip space -> NDC
+	Vec4f v = project ? Vec4MultMat4(camCoords, projMat) : camCoords;
 	//Perspective divide
 	if(v.w != 0.0) {
 		v.x /= v.w;
