@@ -24,7 +24,7 @@ Renderer renderer = {
 	.windowHeight = 1080,
 	.sdlColorBufferTexture = nullptr,
 	.trisToRender = {},
-	.renderWireframe = true,
+	.renderWireframe = false,
 	.renderMode = RenderMode::TEXTURED,
 	.projectionMat = {},
 	.backfaceCulling = true,
@@ -139,12 +139,14 @@ void Update() {
 	);
 
 	//NOTE: Temporary
-	// rotation += 1 * renderer.deltaTime;
+	rotation += 1 * renderer.deltaTime;
 
 	//Setting up the tranformation matrices
 	Mat4f scaleMat = GetScaleMat(1, 1, 1);
 	Mat4f rotMat = GetRotationMat(rotation,rotation,rotation);
 	Mat4f translationMat = GetTranslationMat(0, 0, 5);
+	//Scale -> Rotate -> Translate
+	Mat4f modelMat = (scaleMat * rotMat) * translationMat;
 
 	//Transformation and projection of the model vertices
 	for (Face &face : model.mesh.faces){
@@ -154,10 +156,7 @@ void Update() {
 
 		for (int i = 0; i < 3; i++) {
 			Vec3f v = faceVertices[i];
-			//Scale -> Rotate -> Translate
-			v = Vec4MultMat4(Vec4f(v), scaleMat);
-			v = Vec4MultMat4(Vec4f(v), rotMat);
-			v = Vec4MultMat4(Vec4f(v), translationMat);
+			v = Vec4MultMat4(Vec4f(v), modelMat);
 
 			//World space -> Camera space
 			v = Vec4MultMat4(Vec4f(v), worldToCameraMatrix);
