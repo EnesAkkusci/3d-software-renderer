@@ -47,6 +47,8 @@ bool InitWindow() {
 	SDL_GetCurrentDisplayMode(0, &displayMode);
 	int fullScreenWidth = displayMode.w;
 	int fullScreenHeight = displayMode.h;
+	renderer.windowWidth = fullScreenWidth;
+	renderer.windowHeight = fullScreenHeight;
 
 	renderer.sdlWindow = SDL_CreateWindow(
 		NULL,
