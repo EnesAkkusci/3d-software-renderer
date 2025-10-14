@@ -25,6 +25,8 @@ struct Renderer{
 	RenderMode renderMode;
 	Mat4f projectionMat;
 	bool backfaceCulling;
+	Vec3f rotation;
+	bool showcase;
 };
 extern Renderer renderer;
 

@@ -1,7 +1,12 @@
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_sdl2.h>
+#include <imgui/imgui_impl_sdlrenderer2.h>
 #include <SDL.h>
 #include <cstdint>
 #include <immintrin.h>
 #include <iostream>
+#include <cmath>
+#include <numbers>
 #include "renderer.h"
 #include "SDL_pixels.h"
 #include "SDL_render.h"
@@ -24,10 +29,12 @@ Renderer renderer = {
 	.windowHeight = 1080,
 	.sdlColorBufferTexture = nullptr,
 	.trisToRender = {},
-	.renderWireframe = true,
+	.renderWireframe = false,
 	.renderMode = RenderMode::TEXTURED,
 	.projectionMat = {},
 	.backfaceCulling = true,
+	.rotation = {},
+	.showcase = false,
 };
 
 bool InitWindow() {
@@ -90,11 +97,22 @@ void Setup() {
 
 	LoadObjFile(model.mesh, "crab.obj");
 	LoadPngTexture(model, "crab.png");
+
+	//Setting up ImGui
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	// ImGuiIO& io = ImGui::GetIO(); (void)io;
+	// io.FontGlobalScale = 2.0f;
+	// ImGui::GetStyle().ScaleAllSizes(2.0);
+	ImGui_ImplSDL2_InitForSDLRenderer(renderer.sdlWindow, renderer.sdlRenderer);
+	ImGui_ImplSDLRenderer2_Init(renderer.sdlRenderer);
 }
 
 void ProcessInput(bool &isRunning){
 	SDL_Event sdlEvent;
 	while(SDL_PollEvent(&sdlEvent)) {
+		ImGui_ImplSDL2_ProcessEvent(&sdlEvent);
+
 		switch (sdlEvent.type){
 		case SDL_QUIT: isRunning = false; break;
 		case SDL_KEYDOWN:
@@ -121,7 +139,44 @@ void ProcessInput(bool &isRunning){
 	}
 }
 
-float rotation  = 0.0;
+void RunImGui(SDL_Renderer *renderer, Vec3f &rotation, bool &showcase, RenderMode &renderMode, bool &wireframe, bool &backface) {
+	ImGui_ImplSDLRenderer2_NewFrame();
+	ImGui_ImplSDL2_NewFrame();
+	ImGui::NewFrame();
+	// ImGui::ShowDemoWindow();
+	
+	if(ImGui::Begin("Model Controls")){
+
+		ImGui::NewLine();
+		const char* renderModeLabels[] = {"Textured", "Filled", "No Texture"};
+		int mode = (int)renderMode;
+		if(ImGui::Combo("Render mode", &mode, renderModeLabels, IM_ARRAYSIZE(renderModeLabels))) {
+			renderMode = (RenderMode)mode;
+		}
+		ImGui::Checkbox("Wireframe", &wireframe);
+		ImGui::SameLine();
+		ImGui::Checkbox("Backface culling", &backface);
+		ImGui::NewLine();
+		ImGui::Separator();
+		ImGui::NewLine();
+
+		ImGui::Checkbox("Showcase", &showcase);
+		ImGui::SameLine();
+		ImGui::BeginDisabled(showcase);
+		if(ImGui::Button("Reset rotation")) {
+			rotation = {0,0,0};
+		}
+		ImGui::SliderAngle("X (pitch)", &rotation.x, 0.0f, 360.0f);
+		ImGui::SliderAngle("Y (yaw)",   &rotation.y, 0.0f, 360.0f);
+		ImGui::SliderAngle("Z (roll)",  &rotation.z, 0.0f, 360.0f);
+		ImGui::EndDisabled();
+	}
+	ImGui::End();
+
+	ImGui::Render();
+	ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
+}
+
 void Update() {
 	//Limiting the FPS
 	int timeToWait = renderer.MIN_MS_PER_FRAME - (SDL_GetTicks64() - renderer.msPassedUntilLastFrame);
@@ -138,12 +193,17 @@ void Update() {
 		{0,1,0}
 	);
 
-	//NOTE: Temporary
-	// rotation += 1 * renderer.deltaTime;
+	if (renderer.showcase) {
+		// renderer.rotation = (renderer.rotation + (1 * renderer.deltaTime));
+		constexpr float TAU = 2.0f * std::numbers::pi_v<float>;
+		renderer.rotation.x = std::fmod(renderer.rotation.x + 1.0f * renderer.deltaTime, TAU);
+		renderer.rotation.y = std::fmod(renderer.rotation.y + 1.0f * renderer.deltaTime, TAU);
+		renderer.rotation.z = std::fmod(renderer.rotation.x + 1.0f * renderer.deltaTime, TAU);
+	}
 
 	//Setting up the tranformation matrices
 	Mat4f scaleMat = GetScaleMat(1, 1, 1);
-	Mat4f rotMat = GetRotationMat(rotation,rotation,rotation);
+	Mat4f rotMat = GetRotationMat(renderer.rotation.x,renderer.rotation.y,renderer.rotation.z);
 	Mat4f translationMat = GetTranslationMat(0, 0, 5);
 
 	//Transformation and projection of the model vertices
@@ -267,14 +327,22 @@ void Render() {
 		if (renderer.renderWireframe) { DrawTriangle(tri, 0xFF00FF00); }
 	}
 
-
-
 	renderer.trisToRender.clear();
 
 	RenderColorBuffer();
+
+	RunImGui(
+		renderer.sdlRenderer,
+		renderer.rotation,
+		renderer.showcase,
+		renderer.renderMode,
+		renderer.renderWireframe,
+		renderer.backfaceCulling
+	);
+
+	SDL_RenderPresent(renderer.sdlRenderer);
 	ClearColorBuffer(0xFF000000); //Clear with black
 	ClearZBuffer();
-	SDL_RenderPresent(renderer.sdlRenderer);
 }
 
 void CleanUp() {
