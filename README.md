@@ -22,6 +22,6 @@ A 3D graphics project I made to learn the foundations and first principles of gr
 Clone the repo, create a '''/build''' directory and run ''' cmake ..'''
 
 ### Notes
-My previous project was very Modern C++ focused, so for this one I tried a more C-like C++ style.
-You can check out main.cpp for an overview of the graphics pipeline and conventions used int this project.
+My previous project was very Modern C++ focused, so for this one I tried a more C-like C++ style.  
+You can check out main.cpp for an overview of the graphics pipeline and conventions used int this project.  
 Many thanks to Gustavo Pezzi from [pikuma.com](https://pikuma.com) for much of the inspration and information behind the making of this engine.
