@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <vector>
 #include <SDL.h>
 #include "linear_algebra.h"
@@ -27,6 +28,9 @@ struct Renderer{
 	bool backfaceCulling;
 	Vec3f rotation;
 	bool showcase;
+	std::vector<std::string> modelNames;
+	std::vector<const char*> imguiModelLabels;
+	int currentModelIndex;
 };
 extern Renderer renderer;
 

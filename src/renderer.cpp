@@ -4,6 +4,8 @@
 #include <SDL.h>
 #include <cstdint>
 #include <immintrin.h>
+#include <unordered_map>
+#include <unordered_set>
 #include <iostream>
 #include <cmath>
 #include <numbers>
@@ -16,6 +18,7 @@
 #include "model.h"
 #include "camera.h"
 #include "clipping.h"
+#include "filesystem"
 
 static const int FPS = 144;
 Renderer renderer = {
@@ -35,6 +38,9 @@ Renderer renderer = {
 	.backfaceCulling = true,
 	.rotation = {},
 	.showcase = false,
+	.modelNames = {},
+	.imguiModelLabels = {},
+	.currentModelIndex = 0,
 };
 
 bool InitWindow() {
@@ -72,6 +78,48 @@ bool InitWindow() {
 	return true;
 }
 
+void FindModelFiles() {
+    std::string path = ASSETS_PATH;
+    std::unordered_map<std::string, std::unordered_set<std::string>> seen;
+
+    for (const auto& entry : std::filesystem::directory_iterator(path)) {
+        auto filename = entry.path().filename().string();
+
+        if (filename.size() <= 4) {
+            std::cout << "File not supported: " << filename << std::endl;
+            continue;
+        }
+
+        std::string ext = filename.substr(filename.size() - 4);
+        std::string base = filename.substr(0, filename.size() - 4);
+
+        if (ext == ".obj" || ext == ".png") {
+            seen[base].insert(ext);
+        } else {
+            std::cout << "File type not supported: " << ext << std::endl;
+        }
+    }
+
+    // Now process results
+    for (auto& [name, exts] : seen) {
+        if (exts.count(".obj") && exts.count(".png")) {
+            renderer.modelNames.push_back(name);
+        } else {
+            std::cout << "Incomplete model file: " << name << std::endl;
+        }
+    }
+
+	renderer.imguiModelLabels.reserve(renderer.modelNames.size());
+	for (auto& s : renderer.modelNames) renderer.imguiModelLabels.push_back(s.c_str());
+}
+
+void LoadModelFromIndex(int i){
+	UnloadObjFile(model.mesh);
+	UnloadPngTexture(model);
+	LoadObjFile(model.mesh, (renderer.modelNames[i] + ".obj").c_str());
+	LoadPngTexture(model, (renderer.modelNames[i] + ".png").c_str());
+}
+
 void Setup() {
 	display.colorBuffer = new uint32_t[renderer.windowWidth * renderer.windowHeight];
 	renderer.sdlColorBufferTexture = SDL_CreateTexture(
@@ -97,8 +145,11 @@ void Setup() {
 	ClearColorBuffer(0xFF000000); //Clear with black
 	ClearZBuffer();
 
-	LoadObjFile(model.mesh, "crab.obj");
-	LoadPngTexture(model, "crab.png");
+	FindModelFiles();
+
+	LoadModelFromIndex(renderer.currentModelIndex);
+	// LoadObjFile(model.mesh, "crab.obj");
+	// LoadPngTexture(model, "crab.png");
 
 	//Setting up ImGui
 	IMGUI_CHECKVERSION();
@@ -141,7 +192,7 @@ void ProcessInput(bool &isRunning){
 	}
 }
 
-void RunImGui(SDL_Renderer *renderer, Vec3f &rotation, bool &showcase, RenderMode &renderMode, bool &wireframe, bool &backface) {
+void RenderImGui(SDL_Renderer *SDLrenderer, Vec3f &rotation, bool &showcase, RenderMode &renderMode, bool &wireframe, bool &backface) {
 	ImGui_ImplSDLRenderer2_NewFrame();
 	ImGui_ImplSDL2_NewFrame();
 	ImGui::NewFrame();
@@ -172,11 +223,23 @@ void RunImGui(SDL_Renderer *renderer, Vec3f &rotation, bool &showcase, RenderMod
 		ImGui::SliderAngle("Y (yaw)",   &rotation.y, 0.0f, 360.0f);
 		ImGui::SliderAngle("Z (roll)",  &rotation.z, 0.0f, 360.0f);
 		ImGui::EndDisabled();
+		ImGui::NewLine();
+		ImGui::Separator();
+		ImGui::NewLine();
+
+		if(ImGui::Combo(
+			"Select Model",
+			&renderer.currentModelIndex,
+			renderer.imguiModelLabels.data(),
+			static_cast<int>(renderer.imguiModelLabels.size())
+		)) {
+			LoadModelFromIndex(renderer.currentModelIndex);
+		}
 	}
 	ImGui::End();
 
 	ImGui::Render();
-	ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
+	ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), SDLrenderer);
 }
 
 void Update() {
@@ -332,7 +395,7 @@ void Render() {
 
 	RenderColorBuffer();
 
-	RunImGui(
+	RenderImGui(
 		renderer.sdlRenderer,
 		renderer.rotation,
 		renderer.showcase,
