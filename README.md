@@ -1,5 +1,5 @@
 # 3d-software-renderer
-A 3D graphics project I made to learn the foundations and first principles of graphics programming. The project is a 3D CPU renderer and a model viewer with as little libraries/APIs as possible.
+A 3D graphics project I made to learn the foundations and first principles of graphics programming. The project is a 3D CPU renderer and a model viewer with as little libraries/APIs as possible.  
 **Libraries:** 
 - SDL2: For managing windows and rendering the framebuffer.
 - stb-image: For parsing png files.
