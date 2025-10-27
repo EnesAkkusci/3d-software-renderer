@@ -6,7 +6,9 @@ A 3D graphics project I made to learn the foundations and first principles of gr
 - ImGui
 
 ## Demo
-![3d-renderer-demo](./showcase/3d-renderer.gif)
+
+https://github.com/user-attachments/assets/f0f55fd7-5b77-4d6d-8a18-bfba0ef58a51
+
 
 ## Features
 - Simple linear algebra library
