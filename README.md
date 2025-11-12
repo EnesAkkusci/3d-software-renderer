@@ -21,7 +21,10 @@ https://github.com/user-attachments/assets/f0f55fd7-5b77-4d6d-8a18-bfba0ef58a51
 - Runtime model switching
 
 ## How to run with CMake
-Clone the repo, create a '''/build''' directory and run ''' cmake ..'''
+Clone the repo create and go in to the ```.\build ``` directory and run ``` cmake .. ```.
+
+## How to run with Batch
+Clone the repo and run ```.\build.bat compile ``` and ``` .\build.bat run ```.
 
 ### Notes
 My previous project was very Modern C++ focused, so for this one I tried a more C-like C++ style.  
